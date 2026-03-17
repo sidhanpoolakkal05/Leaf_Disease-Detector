@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0b0f0d;
+  --color-deep-green: #0f3d2e;
+  --color-neon-green: #3cff7c;
+  --color-glass-white: rgba(255, 255, 255, 0.05);
+  
+  --font-sans: "Inter", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  
+  --animate-scan: scan 3s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-blob: blob-bounce 7s infinite alternate;
+
+  @keyframes scan {
+    0%, 100% { transform: translateY(0); opacity: 0.8; }
+    50% { transform: translateY(100%); opacity: 0.2; }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes blob-bounce {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+  }
+
+  @keyframes scan-line {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Glassmorphism Utility */
+.glass-morphism {
+  background: rgba(15, 61, 46, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(60, 255, 124, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 20px rgba(60, 255, 124, 0.3);
+  border-color: rgba(60, 255, 124, 0.5);
+  transition: all 0.3s ease;
+}
+
+.neon-text {
+  text-shadow: 0 0 10px rgba(60, 255, 124, 0.5);
+}
+
+.gradient-bg {
+  background: radial-gradient(circle at top right, rgba(15, 61, 46, 0.5), transparent),
+              radial-gradient(circle at bottom left, rgba(11, 15, 13, 1), rgba(15, 61, 46, 0.2));
+}
+
+.scan-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(60, 255, 124, 0.2), transparent);
+  animation: scan-line 2.5s linear infinite;
+  pointer-events: none;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #3cff7c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.mesh-gradient {
+  background-color: var(--color-background);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(15, 61, 46, 0.3) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, rgba(60, 255, 124, 0.1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, rgba(15, 61, 46, 0.3) 0, transparent 50%);
+}
+
+.delay-2000 {
+  animation-delay: 2s;
+}
+
+.delay-4000 {
+  animation-delay: 4s;
+}
+
+.selection\:bg-neon-green\/30 *::selection {
+  background-color: rgba(60, 255, 124, 0.3);
+}
