@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform, type Variants } from 'framer-motion';
 import { Shield, Zap, Target, ArrowRight, Activity, Database, MessageSquare, PlayCircle } from 'lucide-react';
 import { GlassCard, FuturisticButton } from '../components/ui/Base';
 import { Link } from 'react-router-dom';
-import heroImg from '../assets/Screenshot 2026-03-17 175755.png';
+import heroImg from '../assets/hero.png';
 
 export const Home = () => {
   const { scrollY } = useScroll();
