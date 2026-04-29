@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Camera, X, CheckCircle, AlertTriangle, ShieldCheck, Thermometer, Droplets, Sun, RefreshCw, Cpu, Scan, Info } from 'lucide-react';
+import { Upload, Camera, X, CheckCircle, AlertTriangle, ShieldCheck, Thermometer, Droplets, Sun, RefreshCw, Cpu, Scan, Info, Wifi, WifiOff } from 'lucide-react';
 import { GlassCard, FuturisticButton } from '../components/ui/Base';
 
 export const Diagnose = () => {
@@ -11,8 +11,26 @@ export const Diagnose = () => {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [backendStatus, setBackendStatus] = useState<'connecting' | 'online' | 'offline'>('connecting');
 
   const BACKEND_URL = 'https://phytoai-backend.onrender.com';
+
+  // Warm up the backend as soon as the page loads
+  useEffect(() => {
+    const warmUp = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/health`, { signal: AbortSignal.timeout(30000) });
+        if (res.ok) {
+          setBackendStatus('online');
+        } else {
+          setBackendStatus('offline');
+        }
+      } catch {
+        setBackendStatus('offline');
+      }
+    };
+    warmUp();
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,15 +104,42 @@ export const Diagnose = () => {
           <h1 className="text-4xl md:text-6xl font-black mb-4">Plant Disease <br /><span className="text-gradient">Diagnostic AI</span></h1>
           <p className="text-gray-400 text-lg">Holographic analysis for instant agricultural health assessment.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="bg-white/5 border border-white/10 p-6 rounded-3xl text-center">
-            <div className="text-gray-500 text-[10px] font-black uppercase mb-1">LATENCY</div>
-            <div className="text-2xl font-black text-neon-green">240ms</div>
-          </div>
+        <div className="flex gap-4 items-center">
           <div className="bg-white/5 border border-white/10 p-6 rounded-3xl text-center">
             <div className="text-gray-500 text-[10px] font-black uppercase mb-1">DATASET</div>
             <div className="text-2xl font-black text-neon-green">1.2M+</div>
           </div>
+          {/* Live Backend Status */}
+          <motion.div
+            animate={{ opacity: 1 }}
+            className={`p-4 rounded-3xl border text-center min-w-[110px] ${
+              backendStatus === 'online'
+                ? 'bg-neon-green/10 border-neon-green/30'
+                : backendStatus === 'offline'
+                ? 'bg-red-500/10 border-red-500/30'
+                : 'bg-white/5 border-white/10'
+            }`}
+          >
+            <div className="text-gray-500 text-[10px] font-black uppercase mb-2">AI ENGINE</div>
+            {backendStatus === 'connecting' && (
+              <div className="flex items-center justify-center gap-2 text-yellow-400">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span className="text-xs font-black">WARMING</span>
+              </div>
+            )}
+            {backendStatus === 'online' && (
+              <div className="flex items-center justify-center gap-2 text-neon-green">
+                <Wifi className="w-4 h-4" />
+                <span className="text-xs font-black">ONLINE</span>
+              </div>
+            )}
+            {backendStatus === 'offline' && (
+              <div className="flex items-center justify-center gap-2 text-red-400">
+                <WifiOff className="w-4 h-4" />
+                <span className="text-xs font-black">OFFLINE</span>
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
 
@@ -201,11 +246,11 @@ export const Diagnose = () => {
           <div className="flex gap-4">
             <FuturisticButton 
               className="flex-[2] py-5 rounded-2xl text-lg font-bold"
-              disabled={!selectedImage || isScanning || result}
+              disabled={!selectedImage || isScanning || !!result || backendStatus === 'connecting'}
               onClick={startScan}
             >
               {isScanning ? <RefreshCw className="w-6 h-6 animate-spin mr-2" /> : <Scan className="w-6 h-6 mr-2" />}
-              {isScanning ? "Analyzing Tissue..." : "Execute Scan"}
+              {backendStatus === 'connecting' ? 'Warming Up Engine...' : isScanning ? 'Analyzing Tissue...' : 'Execute Scan'}
             </FuturisticButton>
             <FuturisticButton 
               variant="outline" 
