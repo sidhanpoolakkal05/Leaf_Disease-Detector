@@ -9,35 +9,61 @@ export const Diagnose = () => {
   const [result, setResult] = useState<any | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const BACKEND_URL = 'https://phytoai-backend.onrender.com';
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
         setResult(null);
+        setError(null);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const startScan = () => {
+  const startScan = async () => {
+    if (!selectedFile) return;
     setIsScanning(true);
-    // Simulate AI Processing
-    setTimeout(() => {
-      setIsScanning(false);
-      setResult({
-        disease: "Tomato Early Blight",
-        confidence: 94.8,
-        severity: "Moderate",
-        score: 82,
-        why: "Common fungal disease caused by Alternaria solani. Thrives in high humidity and warm temperatures.",
-        symptoms: ["Brown spots with concentric rings", "Yellowing of leaves", "Loss of lower foliage"],
-        organic: ["Apply neem oil", "Baking soda solution (1 tsp in 1L water)", "Prune infected leaves"],
-        chemical: ["Chlorothalonil fungicide", "Mancozeb Copper-based sprays"],
-        prevention: ["Crop rotation", "Drip irrigation to keep leaves dry", "Maintain plant spacing"]
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const response = await fetch(`${BACKEND_URL}/predict`, {
+        method: 'POST',
+        body: formData,
       });
-    }, 4000);
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || 'Prediction failed');
+      }
+
+      const data = await response.json();
+
+      setResult({
+        disease: data.prediction.disease,
+        confidence: (data.prediction.confidence * 100).toFixed(1),
+        severity: data.prediction.severity,
+        score: Math.round(data.prediction.confidence * 100),
+        why: data.details.symptoms.join(' '),
+        organic: data.details.treatment.slice(0, 3),
+        chemical: data.details.prevention.slice(0, 3),
+        prevention: data.details.prevention,
+      });
+    } catch (err: any) {
+      setError(err.message || 'Could not connect to the AI backend. Please try again.');
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const reset = () => {
@@ -190,6 +216,23 @@ export const Diagnose = () => {
             </FuturisticButton>
           </div>
           
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium"
+            >
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold mb-1">Scan Failed</p>
+                <p>{error}</p>
+                {error.includes('connect') && (
+                  <p className="text-xs mt-2 text-red-400/70">The backend may be waking up (free tier). Wait 30 seconds and try again.</p>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           <div className="flex items-center gap-3 text-xs text-gray-500 font-bold uppercase tracking-widest pl-2">
             <Info className="w-4 h-4 text-neon-green" /> Scan result covers 32 parameters
           </div>
